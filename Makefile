@@ -5,6 +5,7 @@ ROOT_DIR := .
 BUILD_DIR := $(ROOT_DIR)/build
 DEPS_DIR := $(ROOT_DIR)/deps
 SRC_DIR := $(ROOT_DIR)/src
+INCLUDE_DIR := $(ROOT_DIR)/include
 
 CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=500
 CFLAGS += -fPIC
@@ -71,7 +72,7 @@ OBJECTS += $(BUILD_DIR)/deps/libco/libco.o
 endif
 
 RAW_HEADERS := $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/http/*.h)
-HEADERS := $(subst $(SRC_DIR),$(BUILD_DIR)/include,$(RAW_HEADERS))
+HEADERS := $(subst $(SRC_DIR),$(INCLUDE_DIR),$(RAW_HEADERS))
 
 all: $(BUILD_DIR)/libasync.so $(BUILD_DIR)/libasync.a $(HEADERS)
 
@@ -91,13 +92,14 @@ $(BUILD_DIR)/src/%.o: $(SRC_DIR)/%.c
 # TODO: Find files in subdirectories without using shell?
 -include $(shell find $(BUILD_DIR)/h -name "*.d")
 
-$(BUILD_DIR)/include/%.h: $(SRC_DIR)/%.h
+$(INCLUDE_DIR)/%.h: $(SRC_DIR)/%.h
 	@- mkdir -p $(dir $@)
 	cp $^ $@
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(INCLUDE_DIR)
 
 .PHONY: distclean
 distclean: clean
