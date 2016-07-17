@@ -5,7 +5,7 @@ ROOT_DIR := .
 BUILD_DIR := $(ROOT_DIR)/build
 DEPS_DIR := $(ROOT_DIR)/deps
 SRC_DIR := $(ROOT_DIR)/src
-INCLUDE_DIR := $(ROOT_DIR)/include
+INCLUDE_DIR := $(ROOT_DIR)/include/async
 
 CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=500
 CFLAGS += -fPIC
