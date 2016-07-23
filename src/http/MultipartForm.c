@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../deps/multipart-parser-c/multipart_parser.h"
+#include "multipart-parser-c/multipart_parser.h"
 #include "MultipartForm.h"
 #include "../util/common.h"
 

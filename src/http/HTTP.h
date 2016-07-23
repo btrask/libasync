@@ -5,8 +5,8 @@
 #define HTTPCONNECTION_H
 
 #include <stdbool.h>
-#include "../../deps/libressl-portable/include/tls.h"
-#include "../../deps/http_parser/http_parser.h"
+#include "libressl-portable/include/tls.h"
+#include "http_parser/http_parser.h"
 #include "../async.h"
 
 typedef enum http_method HTTPMethod;

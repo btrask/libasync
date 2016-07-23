@@ -4,8 +4,8 @@
 #ifndef ASYNC_H
 #define ASYNC_H
 
-#include "../deps/uv/include/uv.h"
-#include "../deps/libco/libco.h"
+#include "uv/include/uv.h"
+#include "libco/libco.h"
 
 // TODO: Get page size at runtime?
 #define STACK_SIZE(kb) (1024 * (kb) * sizeof(void *) / 4)

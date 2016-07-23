@@ -4,7 +4,7 @@
 #ifndef HTTPSERVER_H
 #define HTTPSERVER_H
 
-#include "../../deps/libressl-portable/include/tls.h"
+#include "libressl-portable/include/tls.h"
 #include "HTTP.h"
 
 typedef struct HTTPServer* HTTPServerRef;

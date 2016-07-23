@@ -2,7 +2,7 @@
 // MIT licensed (see LICENSE for details)
 
 #include <stdbool.h>
-#include "../../deps/libressl-portable/include/tls.h"
+#include "libressl-portable/include/tls.h"
 #include "../async.h"
 
 typedef struct Socket *SocketRef;

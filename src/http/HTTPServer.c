@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../deps/uv/include/uv.h"
+#include "uv/include/uv.h"
 #include "../async.h"
 #include "HTTPServer.h"
 #include "../util/common.h"
