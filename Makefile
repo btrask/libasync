@@ -58,12 +58,14 @@ RAW_OBJECTS := $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/http/*.c)
 OBJECTS := $(subst $(SRC_DIR),$(BUILD_DIR)/src,$(RAW_OBJECTS))
 OBJECTS := $(subst .c,.o,$(OBJECTS))
 
-OBJECTS += $(DEPS_DIR)/uv/.libs/libuv.so
+SHARED_OBJECTS += $(DEPS_DIR)/uv/.libs/libuv.so
 
-OBJECTS += $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.so
-OBJECTS += $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.so
-OBJECTS += $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.so
+SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.so
+SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.so
+SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.so
 CFLAGS += -I$(DEPS_DIR)/libressl-portable/include
+
+#OBJECTS += $(SHARED_OBJECTS)
 
 ifdef USE_VALGRIND
 OBJECTS += $(BUILD_DIR)/deps/libcoro/coro.o $(BUILD_DIR)/util/libco_coro.o
@@ -77,11 +79,11 @@ HEADERS := $(subst $(SRC_DIR),$(INCLUDE_DIR)/async,$(RAW_HEADERS))
 
 all: $(BUILD_DIR)/libasync.so $(BUILD_DIR)/libasync.a $(HEADERS)
 
-$(BUILD_DIR)/libasync.so: $(OBJECTS)
+$(BUILD_DIR)/libasync.so: $(OBJECTS) $(SHARED_OBJECTS)
 	@- mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -shared $(OBJECTS) -o $@
+	$(CC) $(CFLAGS) -shared $^ -o $@
 
-$(BUILD_DIR)/libasync.a: $(BUILD_DIR)/libasync.so
+$(BUILD_DIR)/libasync.a: $(OBJECTS)
 	@- mkdir -p $(dir $@)
 	$(AR) rs $@ $^
 
