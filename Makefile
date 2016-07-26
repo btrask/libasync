@@ -54,18 +54,12 @@ WARNINGS += -Wno-sign-compare
 # Checks that format strings are literals amongst other things.
 WARNINGS += -Wformat=2
 
+
 RAW_OBJECTS := $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/http/*.c)
 OBJECTS := $(subst $(SRC_DIR),$(BUILD_DIR)/src,$(RAW_OBJECTS))
 OBJECTS := $(subst .c,.o,$(OBJECTS))
 
-SHARED_OBJECTS += $(DEPS_DIR)/uv/.libs/libuv.so
-
-SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.so
-SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.so
-SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.so
-CFLAGS += -I$(DEPS_DIR)/libressl-portable/include
-
-#OBJECTS += $(SHARED_OBJECTS)
+OBJECTS += $(BUILD_DIR)/deps/multipart_parser.o
 
 ifdef USE_VALGRIND
 OBJECTS += $(BUILD_DIR)/deps/libcoro/coro.o $(BUILD_DIR)/util/libco_coro.o
@@ -73,6 +67,14 @@ CFLAGS += -DCORO_USE_VALGRIND
 else
 OBJECTS += $(BUILD_DIR)/deps/libco/libco.o
 endif
+
+
+SHARED_OBJECTS += $(DEPS_DIR)/uv/.libs/libuv.so
+
+SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.so
+SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.so
+SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.so
+CFLAGS += -I$(DEPS_DIR)/libressl-portable/include
 
 RAW_HEADERS := $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/http/*.h)
 HEADERS := $(subst $(SRC_DIR),$(INCLUDE_DIR)/async,$(RAW_HEADERS))
@@ -132,5 +134,5 @@ $(BUILD_DIR)/deps/libcoro/%.o: $(DEPS_DIR)/libcoro/%.c $(DEPS_DIR)/libcoro/coro.
 
 $(BUILD_DIR)/deps/multipart_parser.o: $(DEPS_DIR)/multipart-parser-c/multipart_parser.c $(DEPS_DIR)/multipart-parser-c/multipart_parser.h
 	@- mkdir -p $(dir $@)
-	$(CC) -c -std=c89 -ansi -pedantic $(WARNINGS) -o $@ $<
+	$(CC) -c -std=c89 -ansi -pedantic -fPIC $(WARNINGS) -o $@ $<
 
