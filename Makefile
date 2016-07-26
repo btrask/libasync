@@ -59,6 +59,7 @@ RAW_OBJECTS := $(wildcard $(SRC_DIR)/*.c $(SRC_DIR)/http/*.c)
 OBJECTS := $(subst $(SRC_DIR),$(BUILD_DIR)/src,$(RAW_OBJECTS))
 OBJECTS := $(subst .c,.o,$(OBJECTS))
 
+OBJECTS += $(BUILD_DIR)/deps/http_parser/http_parser.o
 OBJECTS += $(BUILD_DIR)/deps/multipart_parser.o
 
 ifdef USE_VALGRIND
@@ -131,6 +132,10 @@ $(BUILD_DIR)/deps/libco/%.o: $(DEPS_DIR)/libco/%.c $(DEPS_DIR)/libco/libco.h
 $(BUILD_DIR)/deps/libcoro/%.o: $(DEPS_DIR)/libcoro/%.c $(DEPS_DIR)/libcoro/coro.h
 	@- mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) -std=gnu99 -o $@ $<
+
+$(BUILD_DIR)/deps/http_parser/http_parser.o: $(DEPS_DIR)/http_parser/http_parser.c $(DEPS_DIR)/http_parser/http_parser.h
+	@- mkdir -p $(dir $@)
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/deps/multipart_parser.o: $(DEPS_DIR)/multipart-parser-c/multipart_parser.c $(DEPS_DIR)/multipart-parser-c/multipart_parser.h
 	@- mkdir -p $(dir $@)
