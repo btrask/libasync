@@ -5,6 +5,7 @@
 #include <string.h>
 #include <openssl/rand.h>
 #include "async.h"
+#include "util/raiserlimit.h"
 
 thread_local uv_loop_t async_loop[1] = {};
 thread_local async_t *async_main = NULL;
@@ -16,15 +17,36 @@ static thread_local cothread_t trampoline = NULL;
 static thread_local void (*arg_func)(void *) = NULL;
 static thread_local void *arg_arg = NULL;
 
-static void trampoline_fn(void);
+static uv_signal_t sigpipe[1] = {};
 
-int async_init(void) {
+static void trampoline_fn(void);
+static void ignore_fn(uv_signal_t *const signal, int const signum) {}
+
+int async_process_init(void) {
 	// Depending on how async_pool and async_fs are configured, we might be
 	// using our own thread pool heavily or not. However, at the minimum,
 	// uv_getaddrinfo uses the libuv thread pool, and it blocks on the
 	// network, so don't set this number too low.
 //	if(!getenv("UV_THREADPOOL_SIZE")) putenv((char *)"UV_THREADPOOL_SIZE=4");
 
+	raiserlimit();
+
+	int rc = async_init();
+	if(rc < 0) return rc;
+
+	uv_signal_init(async_loop, sigpipe);
+	uv_signal_start(sigpipe, ignore_fn, SIGPIPE);
+	uv_unref((uv_handle_t *)sigpipe);
+
+	return  0;
+}
+void async_process_destroy(void) {
+	uv_ref((uv_handle_t *)sigpipe);
+	uv_signal_stop(sigpipe);
+	uv_close((uv_handle_t *)sigpipe, NULL);
+	async_destroy();
+}
+int async_init(void) {
 	int rc = uv_loop_init(async_loop);
 	if(rc < 0) return rc;
 	master->fiber = co_active();

@@ -36,7 +36,9 @@ typedef struct {
 extern thread_local uv_loop_t async_loop[1];
 extern thread_local async_t *async_main;
 
-int async_init(void);
+int async_process_init(void); // Main thread
+void async_process_destroy(void);
+int async_init(void); // Secondary threads
 void async_destroy(void);
 
 async_t *async_active(void);
