@@ -19,6 +19,12 @@ static thread_local void *arg_arg = NULL;
 static void trampoline_fn(void);
 
 int async_init(void) {
+	// Depending on how async_pool and async_fs are configured, we might be
+	// using our own thread pool heavily or not. However, at the minimum,
+	// uv_getaddrinfo uses the libuv thread pool, and it blocks on the
+	// network, so don't set this number too low.
+//	if(!getenv("UV_THREADPOOL_SIZE")) putenv((char *)"UV_THREADPOOL_SIZE=4");
+
 	int rc = uv_loop_init(async_loop);
 	if(rc < 0) return rc;
 	master->fiber = co_active();
