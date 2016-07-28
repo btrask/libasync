@@ -218,6 +218,15 @@ int SocketGetPeerInfo(SocketRef const socket, char *const out, size_t const max)
 	return 0;
 }
 
+void SocketAddRef(SocketRef const socket) {
+	if(!socket) return;
+	uv_ref((uv_handle_t *)socket->stream);
+}
+void SocketUnref(SocketRef const socket) {
+	if(!socket) return;
+	uv_unref((uv_handle_t *)socket->stream);
+}
+
 
 static int sock_read(SocketRef const socket, size_t const size, uv_buf_t *const out) {
 	if(!socket->secure) return async_read((uv_stream_t *)socket->stream, size, out);

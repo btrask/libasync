@@ -22,3 +22,6 @@ int SocketFlush(SocketRef const socket, bool const more);
 
 int SocketGetPeerInfo(SocketRef const socket, char *const out, size_t const max);
 
+void SocketAddRef(SocketRef const socket);
+void SocketUnref(SocketRef const socket);
+

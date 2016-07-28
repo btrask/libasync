@@ -183,12 +183,18 @@ ssize_t HTTPConnectionReadRequest(HTTPConnectionRef const conn, HTTPMethod *cons
 	HTTPEvent type;
 	size_t len = 0;
 	for(;;) {
-		// TODO
-		// Use unref because we shouldn't block the server
-		// on a request that may never arrive.
-//		uv_unref((uv_handle_t *)conn->stream);
+#ifdef CORO_USE_VALGRIND
+		// With Valgrind, applications need to carefully deallocate
+		// everything during process termination. That means unref'ing
+		// can potentially use-after-free errors, unless all of the
+		// connections are explicitly cleaned up (but we don't track
+		// connections so we can't do that).
 		rc = HTTPConnectionPeek(conn, &type, buf);
-//		uv_ref((uv_handle_t *)conn->stream);
+#else
+		SocketUnref(conn->socket);
+		rc = HTTPConnectionPeek(conn, &type, buf);
+		SocketAddRef(conn->socket);
+#endif
 		if(rc < 0) return rc;
 		if(HTTPHeaderField == type || HTTPHeadersComplete == type) break;
 		HTTPConnectionPop(conn, buf->len);
