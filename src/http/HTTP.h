@@ -81,4 +81,15 @@ void HTTPHeadersFree(HTTPHeadersRef *const hptr);
 int HTTPHeadersLoad(HTTPHeadersRef const h, HTTPConnectionRef const conn);
 char const *HTTPHeadersGet(HTTPHeadersRef const h, char const *const field);
 
+static int HTTPError(int const uverr) {
+	switch(uverr) {
+		case 0: return 0; // Not necessarily 200 OK
+		case UV_ENAMETOOLONG: return 414; // Request-URI Too Large
+		case UV_E2BIG: return 431; // Request Header Fields Too Large
+		case UV_EMSGSIZE: return 413; // Request Entity Too Large
+		case UV_EINVAL: return 400; // Bad Request
+		default: return 500; // Internal Server Error
+	}
+}
+
 #endif // HTTPCONNECTION_H

@@ -197,7 +197,7 @@ ssize_t HTTPConnectionReadRequest(HTTPConnectionRef const conn, HTTPMethod *cons
 			assertf(0, "Unexpected HTTP event %d", type);
 			return UV_UNKNOWN;
 		}
-		if(len+buf->len+1 > max) return UV_EMSGSIZE;
+		if(len+buf->len+1 > max) return UV_ENAMETOOLONG;
 		memcpy(out+len, buf->base, buf->len);
 		len += buf->len;
 		out[len] = '\0';
@@ -241,7 +241,7 @@ ssize_t HTTPConnectionReadHeaderField(HTTPConnectionRef const conn, char out[], 
 			assertf(0, "Unexpected HTTP event %d", type);
 			return UV_UNKNOWN;
 		}
-		if(len+buf->len+1 > max) return UV_EMSGSIZE;
+		if(len+buf->len+1 > max) return UV_ENAMETOOLONG;
 		memcpy(out+len, buf->base, buf->len);
 		len += buf->len;
 		out[len] = '\0';
@@ -265,7 +265,7 @@ ssize_t HTTPConnectionReadHeaderValue(HTTPConnectionRef const conn, char out[], 
 			assertf(0, "Unexpected HTTP event %d", type);
 			return UV_UNKNOWN;
 		}
-		if(len+buf->len+1 > max) return UV_EMSGSIZE;
+		if(len+buf->len+1 > max) return UV_ENAMETOOLONG;
 		memcpy(out+len, buf->base, buf->len);
 		len += buf->len;
 		out[len] = '\0';
