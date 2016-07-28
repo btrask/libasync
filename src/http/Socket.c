@@ -21,6 +21,8 @@ struct Socket {
 	uv_buf_t rd[1];
 	uv_buf_t wr[1];
 	int err;
+
+	struct sockaddr_storage peername[1]; // For logging.
 };
 
 int SocketAccept(uv_stream_t *const sstream, struct tls *const ssecure, SocketRef *const out) {
@@ -43,9 +45,16 @@ int SocketAccept(uv_stream_t *const sstream, struct tls *const ssecure, SocketRe
 			if(rc < 0) goto cleanup;
 		}
 	}
+
 	socket->rdmem = NULL;
 	*socket->rd = uv_buf_init(NULL, 0);
 	*socket->wr = uv_buf_init(NULL, 0);
+
+	// Do this early because if the peer disconnects, it doesn't work anymore.
+	int len = sizeof(*socket->peername);
+	rc = uv_tcp_getpeername(socket->stream, (struct sockaddr *)socket->peername, &len);
+	if(rc < 0) goto cleanup;
+
 	*out = socket; socket = NULL;
 cleanup:
 	SocketFree(&socket);
@@ -202,13 +211,8 @@ int SocketGetPeerInfo(SocketRef const socket, char *const out, size_t const max)
 	assert(max > 0);
 	assert(out);
 	if(!socket) return UV_EINVAL;
-	struct sockaddr_storage peer[1];
-	int len = sizeof(*peer);
-	int rc = uv_tcp_getpeername(socket->stream, (struct sockaddr *)peer, &len);
-	if(rc < 0) return rc;
-
 	uv_getnameinfo_t req[1];
-	rc = async_getnameinfo(req, (struct sockaddr *)peer, NI_NUMERICSERV);
+	int rc = async_getnameinfo(req, (struct sockaddr *)socket->peername, NI_NUMERICSERV);
 	if(rc < 0) return rc;
 	strlcpy(out, req->host, max);
 	return 0;
