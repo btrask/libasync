@@ -4,6 +4,10 @@
 #ifndef ASYNC_H
 #define ASYNC_H
 
+#ifndef LIBCO_MP
+#define LIBCO_MP
+#endif
+
 #include "uv/include/uv.h"
 #include "libco/libco.h"
 
