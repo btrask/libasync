@@ -637,6 +637,17 @@ int HTTPConnectionSendRedirect(HTTPConnectionRef const conn, uint16_t const stat
 	rc = rc < 0 ? rc : HTTPConnectionEnd(conn);
 	return rc;
 }
+int HTTPConnectionSendSecureRedirect(HTTPConnectionRef const conn, char const *const domain, int const port, char const *const URI) {
+	if(!conn) return 0;
+	if(!domain || '\0' == domain[0]) return UV_EINVAL;
+	if(!port) return UV_EINVAL;
+	if(!URI || '/' != URI[0]) return UV_EINVAL;
+	char loc[1023+1]; // TODO: We should be URI_MAX agnostic.
+	int rc = snprintf(loc, sizeof(loc), "https://%s:%d%s", domain, port, URI);
+	if(rc >= sizeof(loc)) return UV_ENAMETOOLONG;
+	if(rc < 0) return rc;
+	return HTTPConnectionSendRedirect(conn, 301, loc);
+}
 int HTTPConnectionSendFile(HTTPConnectionRef const conn, char const *const path, char const *const type, int64_t size) {
 	int rc = async_fs_open(path, O_RDONLY, 0000);
 	if(UV_ENOENT == rc) return HTTPConnectionSendStatus(conn, 404);

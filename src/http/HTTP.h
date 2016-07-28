@@ -67,6 +67,7 @@ int HTTPConnectionFlush(HTTPConnectionRef const conn);
 int HTTPConnectionSendString(HTTPConnectionRef const conn, uint16_t const status, char const *const str);
 int HTTPConnectionSendStatus(HTTPConnectionRef const conn, uint16_t const status);
 int HTTPConnectionSendRedirect(HTTPConnectionRef const conn, uint16_t const status, char const *const location);
+int HTTPConnectionSendSecureRedirect(HTTPConnectionRef const conn, char const *const domain, int const port, char const *const URI); // From HTTP to HTTPS.
 int HTTPConnectionSendFile(HTTPConnectionRef const conn, char const *const path, char const *const type, int64_t size);
 
 // Misc
