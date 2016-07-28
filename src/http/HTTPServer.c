@@ -21,12 +21,14 @@ struct HTTPServer {
 
 static void connection_cb(uv_stream_t *const socket, int const status);
 
-HTTPServerRef HTTPServerCreate(HTTPListener const listener, void *const context) {
+int HTTPServerCreate(HTTPListener const listener, void *const context, HTTPServerRef *const out) {
 	assertf(listener, "HTTPServer listener required");
-	HTTPServerRef const server = calloc(1, sizeof(struct HTTPServer));
+	HTTPServerRef server = calloc(1, sizeof(struct HTTPServer));
+	if(!server) return UV_ENOMEM;
 	server->listener = listener;
 	server->context = context;
-	return server;
+	*out = server; server = NULL;
+	return 0;
 }
 void HTTPServerFree(HTTPServerRef *const serverptr) {
 	HTTPServerRef server = *serverptr; *serverptr = NULL;
