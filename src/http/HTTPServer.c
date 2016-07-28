@@ -12,6 +12,12 @@
 // You may need to set this to AF_INET6 to enable IPv6 on some systems.
 #define LISTEN_FAMILY AF_UNSPEC
 
+static int tlserr(int const x) {
+	if(0 == x) return 0;
+	if(errno) return -errno;
+	return -1;
+}
+
 struct HTTPServer {
 	HTTPListener listener;
 	void *context;
@@ -82,6 +88,45 @@ int HTTPServerListenSecure(HTTPServerRef const server, char const *const address
 	if(rc < 0) return rc;
 	server->secure = *tlsptr; *tlsptr = NULL;
 	return 0;
+}
+int HTTPServerListenSecurePaths(HTTPServerRef const server, char const *const address, int const port, char const *const keypath, char const *const crtpath) {
+	if(!server) return 0;
+	if(!keypath) return UV_EINVAL;
+	if(!crtpath) return UV_EINVAL;
+	struct tls_config *config = NULL;
+	struct tls *tls = NULL;
+	int rc = 0;
+
+	config = tls_config_new();
+	if(!config) rc = -errno;
+	if(!config && 0 == rc) rc = -ENOMEM;
+	if(rc < 0) goto cleanup;
+
+	rc = tlserr(tls_config_set_ciphers(config, TLS_CIPHERS));
+	if(rc < 0) goto cleanup;
+	tls_config_set_protocols(config, TLS_PROTOCOLS);
+	rc = tlserr(tls_config_set_key_file(config, keypath));
+	if(rc < 0) goto cleanup;
+	rc = tlserr(tls_config_set_cert_file(config, crtpath));
+	if(rc < 0) goto cleanup;
+
+	tls = tls_server();
+	if(!tls) rc = -errno;
+	if(!tls && 0 == rc) rc = -ENOMEM;
+	if(rc < 0) goto cleanup;
+	rc = tlserr(tls_configure(tls, config));
+	if(rc < 0) {
+		//alogf("TLS config error: %s\n", tls_error(tls));
+		goto cleanup;
+	}
+
+	rc = HTTPServerListenSecure(server, address, port, &tls);
+	if(rc < 0) goto cleanup;
+
+cleanup:
+	tls_config_free(config); config = NULL;
+	tls_free(tls); tls = NULL;
+	return rc;
 }
 void HTTPServerClose(HTTPServerRef const server) {
 	if(!server) return;

@@ -24,6 +24,7 @@ int HTTPServerCreate(HTTPListener const listener, void *const context, HTTPServe
 void HTTPServerFree(HTTPServerRef *const serverptr);
 int HTTPServerListen(HTTPServerRef const server, char const *const address, int const port);
 int HTTPServerListenSecure(HTTPServerRef const server, char const *const address, int const port, struct tls **const tlsptr);
+int HTTPServerListenSecurePaths(HTTPServerRef const server, char const *const address, int const port, char const *const keypath, char const *const crtpath);
 void HTTPServerClose(HTTPServerRef const server);
 
 #endif
