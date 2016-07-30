@@ -120,6 +120,7 @@ void SocketFree(SocketRef *const socketptr) {
 	if(!socket) return;
 	SocketClose(socket);
 	socket->err = 0;
+	memset(socket->peername, 0, sizeof(*socket->peername));
 	assert_zeroed(socket, 1);
 	FREE(&socket);
 }
