@@ -15,6 +15,7 @@
 enum {
 	HTTPMessageIncomplete = 1 << 0,
 	HTTPKeepAlive = 1 << 1,
+	HTTPOutgoing = 1 << 2,
 };
 
 static http_parser_settings const settings;
@@ -76,6 +77,7 @@ int HTTPConnectionCreateOutgoingSecure(char const *const domain, unsigned const 
 	http_parser_init(conn->parser, HTTP_RESPONSE);
 	conn->parser->data = conn;
 	conn->flags |= HTTPKeepAlive;
+	conn->flags |= HTTPOutgoing;
 	conn->res_status = 0;
 	conn->res_length = UINT64_MAX;
 
@@ -606,6 +608,7 @@ int HTTPConnectionEnd(HTTPConnectionRef const conn) {
 	int rc = HTTPConnectionFlush(conn);
 	if(rc < 0) return rc;
 	if(HTTPKeepAlive & conn->flags) return 0;
+	if(HTTPOutgoing & conn->flags) return 0; // Don't close after sending request. Could use shutdown(2) here.
 	SocketClose(conn->socket);
 	return 0;
 }
