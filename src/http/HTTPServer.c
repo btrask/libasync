@@ -1,11 +1,11 @@
-// Copyright 2014-2015 Ben Trask
+// Copyright 2014-2016 Ben Trask
 // MIT licensed (see LICENSE for details)
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "uv/include/uv.h"
-#include "../async.h"
+#include "libressl-portable/include/tls.h"
 #include "HTTPServer.h"
 #include "../util/common.h"
 
@@ -21,8 +21,7 @@ static int tlserr(int const x) {
 struct HTTPServer {
 	HTTPListener listener;
 	void *context;
-	uv_tcp_t socket[1];
-	struct tls *secure;
+	async_tls_t socket[1];
 };
 
 static void connection_cb(uv_stream_t *const socket, int const status);
@@ -48,11 +47,11 @@ void HTTPServerFree(HTTPServerRef *const serverptr) {
 
 int HTTPServerListen(HTTPServerRef const server, char const *const address, int const port) {
 	if(!server) return 0;
-	assertf(!server->socket->data, "HTTPServer already listening");
+	assertf(!server->socket->stream->data, "HTTPServer already listening");
 	int rc = 0;
 
-	server->socket->data = server;
-	rc = uv_tcp_init(async_loop, server->socket);
+	server->socket->stream->data = server;
+	rc = uv_tcp_init(async_loop, server->socket->stream);
 	if(rc < 0) goto cleanup;
 
 	// Tried getaddrinfo(3) but it seems remarkably disappointing.
@@ -60,34 +59,27 @@ int HTTPServerListen(HTTPServerRef const server, char const *const address, int 
 	if(rc < 0) {
 		char const *name = address;
 		if(!name) name = "::";
-		else if(0 == strcmp("localhost", name)) name = "::1";
+		if(0 == strcmp("localhost", name)) name = "::1";
 		struct sockaddr_in6 addr[1];
 		rc = uv_ip6_addr(name, port, addr);
-		if(rc >= 0) rc = uv_tcp_bind(server->socket, (struct sockaddr const *)addr, 0);
+		if(rc >= 0) rc = uv_tcp_bind(server->socket->stream, (struct sockaddr const *)addr, 0);
 	}
 	if(rc < 0) {
 		char const *name = address;
 		if(!name) name = "0.0.0.0";
-		else if(0 == strcmp("localhost", name)) name = "127.0.0.1";
+		if(0 == strcmp("localhost", name)) name = "127.0.0.1";
 		struct sockaddr_in addr[1];
 		rc = uv_ip4_addr(name, port, addr);
-		if(rc >= 0) rc = uv_tcp_bind(server->socket, (struct sockaddr const *)addr, 0);
+		if(rc >= 0) rc = uv_tcp_bind(server->socket->stream, (struct sockaddr const *)addr, 0);
 	}
 	if(rc < 0) goto cleanup;
 
-	rc = uv_listen((uv_stream_t *)server->socket, 511, connection_cb);
+	rc = uv_listen((uv_stream_t *)server->socket->stream, 511, connection_cb);
 	if(rc < 0) goto cleanup;
 
 cleanup:
 	if(rc < 0) HTTPServerClose(server);
 	return rc;
-}
-int HTTPServerListenSecure(HTTPServerRef const server, char const *const address, int const port, struct tls **const tlsptr) {
-	if(!server) return 0;
-	int rc = HTTPServerListen(server, address, port);
-	if(rc < 0) return rc;
-	server->secure = *tlsptr; *tlsptr = NULL;
-	return 0;
 }
 int HTTPServerListenSecurePaths(HTTPServerRef const server, char const *const address, int const port, char const *const keypath, char const *const crtpath) {
 	if(!server) return 0;
@@ -97,31 +89,30 @@ int HTTPServerListenSecurePaths(HTTPServerRef const server, char const *const ad
 	struct tls *tls = NULL;
 	int rc = 0;
 
+	errno = 0;
 	config = tls_config_new();
-	if(!config) rc = -errno;
-	if(!config && 0 == rc) rc = -ENOMEM;
+	if(!config) rc = -errno < 0 ? -errno : -ENOMEM;
 	if(rc < 0) goto cleanup;
 
-	rc = tlserr(tls_config_set_ciphers(config, TLS_CIPHERS));
+	rc = tlserr(tls_config_set_ciphers(config, ASYNC_TLS_CIPHERS));
 	if(rc < 0) goto cleanup;
-	tls_config_set_protocols(config, TLS_PROTOCOLS);
+	tls_config_set_protocols(config, ASYNC_TLS_PROTOCOLS);
 	rc = tlserr(tls_config_set_key_file(config, keypath));
 	if(rc < 0) goto cleanup;
 	rc = tlserr(tls_config_set_cert_file(config, crtpath));
 	if(rc < 0) goto cleanup;
 
+	errno = 0;
 	tls = tls_server();
-	if(!tls) rc = -errno;
-	if(!tls && 0 == rc) rc = -ENOMEM;
+	if(!tls) rc = -errno < 0 ? -errno : -ENOMEM;
 	if(rc < 0) goto cleanup;
 	rc = tlserr(tls_configure(tls, config));
-	if(rc < 0) {
-		//alogf("TLS config error: %s\n", tls_error(tls));
-		goto cleanup;
-	}
-
-	rc = HTTPServerListenSecure(server, address, port, &tls);
 	if(rc < 0) goto cleanup;
+
+	rc = HTTPServerListen(server, address, port);
+	if(rc < 0) goto cleanup;
+
+	server->socket->secure = tls; tls = NULL;
 
 cleanup:
 	tls_config_free(config); config = NULL;
@@ -130,16 +121,14 @@ cleanup:
 }
 void HTTPServerClose(HTTPServerRef const server) {
 	if(!server) return;
-	if(server->secure) tls_close(server->secure);
-	tls_free(server->secure); server->secure = NULL;
-	async_close((uv_handle_t *)server->socket);
-	server->socket->data = NULL;
+	async_tls_close(server->socket);
+	server->socket->stream->data = NULL;
 }
 
-static void connection(uv_stream_t *const socket) {
-	HTTPServerRef const server = socket->data;
+static void connection(uv_stream_t *const x) {
+	HTTPServerRef const server = x->data;
 	HTTPConnectionRef conn;
-	int rc = HTTPConnectionCreateIncomingSecure(socket, server->secure, 0, &conn);
+	int rc = HTTPConnectionCreateIncoming(server->socket, 0, &conn);
 	if(UV_EOF == rc) return;
 	if(rc < 0) {
 //		alogf("Incoming connection error: %s\n", uv_strerror(rc));

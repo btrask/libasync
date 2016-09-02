@@ -62,9 +62,9 @@ int async_sleep(uint64_t const milliseconds);
 void async_close(uv_handle_t *const handle);
 
 // async_stream.c
-int async_read(uv_stream_t *const stream, size_t const size, uv_buf_t *const out);
+ssize_t async_read(uv_stream_t *const stream, unsigned char *const buf, size_t const max);
+ssize_t async_write(uv_stream_t *const stream, unsigned char const *const buf, size_t const len);
 
-int async_write(uv_stream_t *const stream, uv_buf_t const bufs[], unsigned const nbufs);
 int async_tcp_connect(uv_tcp_t *const stream, struct sockaddr const *const addr);
 
 int async_poll_fd(int const fd, int *const events);

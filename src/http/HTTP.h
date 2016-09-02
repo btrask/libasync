@@ -1,4 +1,4 @@
-// Copyright 2014-2015 Ben Trask
+// Copyright 2014-2016 Ben Trask
 // MIT licensed (see LICENSE for details)
 
 #ifndef HTTPCONNECTION_H
@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include "libressl-portable/include/tls.h"
 #include "http_parser/http_parser.h"
-#include "../async.h"
+#include "../async_tls.h"
 
 typedef enum http_method HTTPMethod;
 typedef enum {
@@ -24,19 +24,18 @@ typedef enum {
 typedef struct HTTPConnection* HTTPConnectionRef;
 typedef struct HTTPHeaders* HTTPHeadersRef;
 
-int HTTPConnectionCreateIncoming(uv_stream_t *const ssocket, unsigned const flags, HTTPConnectionRef *const out);
-int HTTPConnectionCreateIncomingSecure(uv_stream_t *const ssocket, struct tls *const ssecure, unsigned const flags, HTTPConnectionRef *const out);
-int HTTPConnectionCreateOutgoing(char const *const domain, unsigned const flags, HTTPConnectionRef *const out);
-int HTTPConnectionCreateOutgoingSecure(char const *const domain, unsigned const flags, struct tls_config *const tlsconf, HTTPConnectionRef *const out);
+int HTTPConnectionCreateIncoming(async_tls_t *const server, unsigned const flags, HTTPConnectionRef *const out);
+int HTTPConnectionCreateOutgoing(char const *const domain, unsigned const flags, bool const secure, HTTPConnectionRef *const out);
 void HTTPConnectionFree(HTTPConnectionRef *const connptr);
 
 void HTTPConnectionSetKeepAlive(HTTPConnectionRef const conn, bool const flag);
 
-// Reading
-int HTTPConnectionStatus(HTTPConnectionRef const conn); // NOT a HTTP status code.
+// Reading, low level
+int HTTPConnectionStatus(HTTPConnectionRef const conn);
 int HTTPConnectionPeek(HTTPConnectionRef const conn, HTTPEvent *const type, uv_buf_t *const buf);
 void HTTPConnectionPop(HTTPConnectionRef const conn, size_t const len);
 
+// Reading, high level
 ssize_t HTTPConnectionReadRequest(HTTPConnectionRef const conn, HTTPMethod *const method, char *const out, size_t const max);
 int HTTPConnectionReadResponseStatus(HTTPConnectionRef const conn, int *const status);
 ssize_t HTTPConnectionReadHeaderField(HTTPConnectionRef const conn, char out[], size_t const max);
@@ -46,9 +45,11 @@ int HTTPConnectionReadBodyLine(HTTPConnectionRef const conn, char out[], size_t 
 ssize_t HTTPConnectionReadBodyStatic(HTTPConnectionRef const conn, unsigned char *const out, size_t const max);
 int HTTPConnectionDrainMessage(HTTPConnectionRef const conn);
 
-// Writing
+// Writing, low level
 int HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len);
 int HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count);
+
+// Writing, high level
 int HTTPConnectionWriteRequest(HTTPConnectionRef const conn, HTTPMethod const method, char const *const requestURI, char const *const host);
 int HTTPConnectionWriteResponse(HTTPConnectionRef const conn, uint16_t const status, char const *const message);
 int HTTPConnectionWriteHeader(HTTPConnectionRef const conn, char const *const field, char const *const value);
