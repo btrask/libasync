@@ -188,7 +188,7 @@ void HTTPConnectionPop(HTTPConnectionRef const conn, size_t const len) {
 	assert(len <= conn->pbuf->len);
 	conn->pbuf->base += len;
 	conn->pbuf->len -= len;
-	if(0 == conn->pbuf->len) return;
+	if(conn->pbuf->len > 0) return;
 	conn->type = HTTPNothing;
 	conn->pbuf->base = NULL;
 }
