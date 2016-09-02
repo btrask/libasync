@@ -101,6 +101,7 @@ void HTTPConnectionFree(HTTPConnectionRef *const connptr) {
 	*conn->rbuf = uv_buf_init(NULL, 0);
 	*conn->pbuf = uv_buf_init(NULL, 0);
 	conn->type = HTTPNothing;
+	conn->err = 0;
 
 	conn->res_status = 0;
 	conn->res_length = 0;
@@ -625,6 +626,7 @@ int HTTPConnectionEnd(HTTPConnectionRef const conn) {
 	if(HTTPKeepAlive & conn->flags) return 0;
 	if(HTTPOutgoing & conn->flags) return 0; // Don't close after sending request. Could use shutdown(2) here.
 	async_tls_close(conn->socket);
+	conn->err = UV_EOF;
 	return 0;
 }
 int HTTPConnectionFlush(HTTPConnectionRef const conn) {
