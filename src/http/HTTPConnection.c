@@ -37,7 +37,7 @@ struct HTTPConnection {
 	struct sockaddr_storage peername[1];
 };
 
-int HTTPConnectionCreateIncoming(async_tls_t *const server, unsigned const flags, HTTPConnectionRef *const out) {
+int HTTPConnectionAccept(async_tls_t *const server, unsigned const flags, HTTPConnectionRef *const out) {
 	HTTPConnectionRef conn = calloc(1, sizeof(struct HTTPConnection));
 	if(!conn) return UV_ENOMEM;
 	int rc = async_tls_accept(server, conn->socket);
@@ -57,23 +57,14 @@ cleanup:
 	HTTPConnectionFree(&conn);
 	return rc;
 }
-int HTTPConnectionCreateOutgoing(char const *const domain, unsigned const flags, bool const secure, HTTPConnectionRef *const out) {
-	char host[1023+1]; host[0] = '\0';
-	char service[15+1]; service[0] = '\0';
-	int matched = sscanf(domain, "%1023[^:]:%15[0-9]", host, service);
-	if(matched < 1) return UV_EINVAL;
-	if('\0' == host[0]) return UV_EINVAL;
-
+int HTTPConnectionConnect(char const *const host, char const *const port, bool const secure, unsigned const flags, HTTPConnectionRef *const out) {
 	HTTPConnectionRef conn = calloc(1, sizeof(struct HTTPConnection));
 	if(!conn) return UV_ENOMEM;
 	int rc;
 
-	if('\0' == service[0]) {
-		rc = strlcpy(service, secure ? "443" : "80", sizeof(service));
-		if(rc < 0) goto cleanup;
-		assert(rc < sizeof(service));
-	}
-	rc = async_tls_connect(host, service, secure, conn->socket);
+	char const *p = port;
+	if(!p || '\0' == p[0]) p = secure ? "443" : "80";
+	rc = async_tls_connect(host, p, secure, conn->socket);
 	if(rc < 0) goto cleanup;
 
 	http_parser_init(conn->parser, HTTP_RESPONSE);
@@ -426,6 +417,11 @@ int HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigne
 	}
 	return 0;
 }
+int HTTPConnectionFlush(HTTPConnectionRef const conn) {
+	if(!conn) return 0;
+	return 0; // TODO: Bring back write buffering?
+}
+
 int HTTPConnectionWriteRequest(HTTPConnectionRef const conn, HTTPMethod const method, char const *const requestURI, char const *const host) {
 	if(!conn) return 0;
 	char const *methodstr = http_method_str(method);
@@ -628,10 +624,6 @@ int HTTPConnectionEnd(HTTPConnectionRef const conn) {
 	async_tls_close(conn->socket);
 	conn->err = UV_EOF;
 	return 0;
-}
-int HTTPConnectionFlush(HTTPConnectionRef const conn) {
-	if(!conn) return 0;
-	return 0; // TODO
 }
 
 int HTTPConnectionSendMessage(HTTPConnectionRef const conn, uint16_t const status, char const *const str) {

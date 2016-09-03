@@ -5,8 +5,7 @@
 #define HTTPCONNECTION_H
 
 #include <stdbool.h>
-#include "libressl-portable/include/tls.h"
-#include "http_parser/http_parser.h"
+#include "http_parser/http_parser.h" // Only for http_method?
 #include "../async_tls.h"
 
 typedef enum http_method HTTPMethod;
@@ -24,8 +23,8 @@ typedef enum {
 typedef struct HTTPConnection* HTTPConnectionRef;
 typedef struct HTTPHeaders* HTTPHeadersRef;
 
-int HTTPConnectionCreateIncoming(async_tls_t *const server, unsigned const flags, HTTPConnectionRef *const out);
-int HTTPConnectionCreateOutgoing(char const *const domain, unsigned const flags, bool const secure, HTTPConnectionRef *const out);
+int HTTPConnectionAccept(async_tls_t *const server, unsigned const flags, HTTPConnectionRef *const out);
+int HTTPConnectionConnect(char const *const host, char const *const port, bool const secure, unsigned const flags, HTTPConnectionRef *const out);
 void HTTPConnectionFree(HTTPConnectionRef *const connptr);
 
 void HTTPConnectionSetKeepAlive(HTTPConnectionRef const conn, bool const flag);
@@ -48,6 +47,7 @@ int HTTPConnectionDrainMessage(HTTPConnectionRef const conn);
 // Writing, low level
 int HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len);
 int HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count);
+int HTTPConnectionFlush(HTTPConnectionRef const conn);
 
 // Writing, high level
 int HTTPConnectionWriteRequest(HTTPConnectionRef const conn, HTTPMethod const method, char const *const requestURI, char const *const host);
@@ -62,7 +62,6 @@ int HTTPConnectionWriteChunkv(HTTPConnectionRef const conn, uv_buf_t parts[], un
 int HTTPConnectionWriteChunkFile(HTTPConnectionRef const conn, char const *const path);
 int HTTPConnectionWriteChunkEnd(HTTPConnectionRef const conn);
 int HTTPConnectionEnd(HTTPConnectionRef const conn);
-int HTTPConnectionFlush(HTTPConnectionRef const conn);
 
 // Convenience
 int HTTPConnectionSendString(HTTPConnectionRef const conn, uint16_t const status, char const *const str);

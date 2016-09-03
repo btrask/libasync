@@ -128,7 +128,7 @@ void HTTPServerClose(HTTPServerRef const server) {
 static void connection(uv_stream_t *const x) {
 	HTTPServerRef const server = x->data;
 	HTTPConnectionRef conn;
-	int rc = HTTPConnectionCreateIncoming(server->socket, 0, &conn);
+	int rc = HTTPConnectionAccept(server->socket, 0, &conn);
 	if(UV_EOF == rc) return;
 	if(rc < 0) {
 //		alogf("Incoming connection error: %s\n", uv_strerror(rc));
