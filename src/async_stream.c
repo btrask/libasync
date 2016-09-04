@@ -24,7 +24,7 @@ static void read_cb(uv_stream_t *const stream, ssize_t const nread, uv_buf_t con
 	async_state *const state = stream->data;
 	assert(state);
 	assert(state->thread);
-	state->status = nread;
+	state->status = nread ? nread : UV_EAGAIN;
 	async_switch(state->thread);
 }
 ssize_t async_read(uv_stream_t *const stream, unsigned char *const buf, size_t const max) {

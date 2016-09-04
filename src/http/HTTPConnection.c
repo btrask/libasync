@@ -130,6 +130,7 @@ int HTTPConnectionPeek(HTTPConnectionRef const conn, HTTPEvent *const type, uv_b
 			FREE(&conn->buf);
 			ssize_t x = async_tls_read(conn->socket, NULL, 0);
 			assert(x < 0);
+			assert(UV_EOF != x); // We expect to read 0 instead.
 			if(UV_ENOBUFS != x) {
 				conn->err = x;
 				return x;
@@ -142,6 +143,9 @@ int HTTPConnectionPeek(HTTPConnectionRef const conn, HTTPEvent *const type, uv_b
 			}
 			ssize_t rlen = async_tls_read(conn->socket, conn->buf, READ_BUFFER);
 			assert(UV_EOF != rlen); // We expect to read 0 instead.
+			if(0 == rlen && !(HTTPMessageIncomplete & conn->flags)) {
+				rlen = UV_EOF;
+			}
 			if(rlen < 0) {
 				conn->err = rlen;
 				return rlen;
