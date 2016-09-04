@@ -86,6 +86,7 @@ static int HTTPError(int const uverr) {
 		case 0: return 0; // Not necessarily 200 OK
 		case UV_EINVAL: return 400; // Bad Request
 		case UV_EACCES: return 403; // Forbidden
+		case UV_ENOENT: return 404; // Not Found
 		case UV_EMSGSIZE: return 413; // Request Entity Too Large
 		case UV_ENAMETOOLONG: return 414; // Request-URI Too Large
 		case UV_E2BIG: return 431; // Request Header Fields Too Large
