@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "EVP_EncryptInit 3"
-.TH EVP_EncryptInit 3 "2016-06-23" "LibreSSL " "LibreSSL"
+.TH EVP_EncryptInit 3 "2016-09-07" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -160,7 +160,7 @@ EVP_des_ede3_cfb, EVP_desx_cbc, EVP_rc4, EVP_rc4_40, EVP_idea_cbc,
 EVP_idea_ecb, EVP_idea_cfb, EVP_idea_ofb, EVP_idea_cbc, EVP_rc2_cbc,
 EVP_rc2_ecb, EVP_rc2_cfb, EVP_rc2_ofb, EVP_rc2_40_cbc, EVP_rc2_64_cbc,
 EVP_bf_cbc, EVP_bf_ecb, EVP_bf_cfb, EVP_bf_ofb, EVP_cast5_cbc,
-EVP_cast5_ecb, EVP_cast5_cfb, EVP_cast5_ofb, 
+EVP_cast5_ecb, EVP_cast5_cfb, EVP_cast5_ofb,
 EVP_aes_128_gcm, EVP_aes_192_gcm, EVP_aes_256_gcm, EVP_aes_128_ccm,
 EVP_aes_192_ccm, EVP_aes_256_ccm, EVP_rc5_32_12_16_cbc,
 EVP_rc5_32_12_16_cfb, EVP_rc5_32_12_16_ecb, EVP_rc5_32_12_16_ofb
@@ -305,9 +305,13 @@ initialized and they always use the default cipher implementation.
 .PP
 \&\fIEVP_EncryptFinal()\fR, \fIEVP_DecryptFinal()\fR and \fIEVP_CipherFinal()\fR are
 identical to \fIEVP_EncryptFinal_ex()\fR, \fIEVP_DecryptFinal_ex()\fR and
-\&\fIEVP_CipherFinal_ex()\fR. In previous releases they also used to clean up
-the \fBctx\fR, but this is no longer done and \fIEVP_CIPHER_CTX_clean()\fR
-must be called to free any context resources.
+\&\fIEVP_CipherFinal_ex()\fR. In previous releases of OpenSSL they also used to clean
+up the \fBctx\fR, but this is no longer done and \fIEVP_CIPHER_CTX_clean()\fR
+must be called to free any context resources. As of LibreSSL 2.4,
+\&\fIEVP_EncryptFinal()\fR and \fIEVP_DecryptFinal()\fR will always clean up, and
+\&\fIEVP_CipherFinal()\fR also cleans up as of LibreSSL 2.5. The use of
+\&\fIEVP_EncryptFinal()\fR, \fIEVP_DecryptFinal()\fR and \fIEVP_CipherFinal()\fR is not
+recommended.
 .PP
 \&\fIEVP_get_cipherbyname()\fR, \fIEVP_get_cipherbynid()\fR and \fIEVP_get_cipherbyobj()\fR
 return an \s-1EVP_CIPHER\s0 structure when passed a cipher name, a \s-1NID\s0 or an

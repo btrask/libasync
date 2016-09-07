@@ -5,6 +5,7 @@ AM_CPPFLAGS += -I $(top_srcdir)/crypto/asn1
 AM_CPPFLAGS += -I $(top_srcdir)/ssl
 AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl
 AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl/compat
+AM_CPPFLAGS += -D_PATH_SSL_CA_FILE=\"$(top_srcdir)/apps/openssl/cert.pem\"
 
 LDADD = $(PLATFORM_LDADD) $(PROG_LDADD)
 LDADD += $(abs_top_builddir)/ssl/libssl.la
@@ -208,6 +209,14 @@ TESTS += mont
 check_PROGRAMS += mont
 mont_SOURCES = mont.c
 
+# ocsp_test
+if ENABLE_EXTRATESTS
+TESTS += ocsptest.sh
+check_PROGRAMS += ocsp_test
+ocsp_test_SOURCES = ocsp_test.c
+endif
+EXTRA_DIST += ocsptest.sh
+
 # optionstest
 TESTS += optionstest
 check_PROGRAMS += optionstest
@@ -314,6 +323,11 @@ EXTRA_DIST += testrsa.sh
 TESTS += timingsafe
 check_PROGRAMS += timingsafe
 timingsafe_SOURCES = timingsafe.c
+
+# tls_ext_alpn
+TESTS += tls_ext_alpn
+check_PROGRAMS += tls_ext_alpn
+tls_ext_alpn_SOURCES = tls_ext_alpn.c
 
 # utf8test
 TESTS += utf8test

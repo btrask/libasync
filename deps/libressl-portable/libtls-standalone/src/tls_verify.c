@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_verify.c,v 1.14 2015/09/29 10:17:04 deraadt Exp $ */
+/* $OpenBSD: tls_verify.c,v 1.16 2016/08/02 07:47:11 jsing Exp $ */
 /*
  * Copyright (c) 2014 Jeremie Courreges-Anglas <jca@openbsd.org>
  *
@@ -24,6 +24,7 @@
 
 #include <openssl/x509v3.h>
 
+#include <tls.h>
 #include "tls_internal.h"
 
 static int tls_match_name(const char *cert_name, const char *name);
@@ -114,7 +115,6 @@ tls_check_subject_altname(struct tls *ctx, X509 *cert, const char *name)
 		GENERAL_NAME	*altname;
 
 		altname = sk_GENERAL_NAME_value(altname_stack, i);
-
 		if (altname->type != type)
 			continue;
 
