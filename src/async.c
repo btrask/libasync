@@ -3,7 +3,7 @@
 
 #include <assert.h>
 #include <string.h>
-#include <openssl/rand.h>
+#include "../deps/libressl-portable/include/openssl/rand.h"
 #include "async.h"
 #include "util/raiserlimit.h"
 
