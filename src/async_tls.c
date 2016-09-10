@@ -8,6 +8,8 @@
 #include "async_tls.h"
 #include "util/common.h"
 
+struct tls_config *async_tls_config = NULL;
+
 static int tlserr(int const rc, struct tls *const secure) {
 	if(0 == rc) return 0;
 	assert(-1 == rc);
@@ -58,7 +60,6 @@ cleanup:
 int async_tls_connect(char const *const host, char const *const port, bool const secure, async_tls_t *const socket) {
 	if(!socket) return UV_EINVAL;
 	struct addrinfo *info = NULL;
-	struct tls_config *config = NULL;
 	int rc;
 	memset(socket, 0, sizeof(async_tls_t));
 
@@ -81,14 +82,10 @@ int async_tls_connect(char const *const host, char const *const port, bool const
 	}
 
 	if(secure) {
-		config = tls_config_new();
-		if(!config) rc = UV_ENOMEM;
-		if(rc < 0) goto cleanup;
-
 		socket->secure = tls_client();
 		if(!socket->secure) rc = UV_ENOMEM;
 		if(rc < 0) goto cleanup;
-		rc = tls_configure(socket->secure, config);
+		rc = tls_configure(socket->secure, async_tls_config);
 		if(rc < 0) goto cleanup;
 		uv_os_fd_t fd;
 		rc = uv_fileno((uv_handle_t *)socket->stream, &fd);
@@ -104,7 +101,6 @@ int async_tls_connect(char const *const host, char const *const port, bool const
 	}
 
 cleanup:
-	tls_config_free(config); config = NULL;
 	uv_freeaddrinfo(info); info = NULL;
 	if(rc < 0) async_tls_close(socket);
 	return rc;

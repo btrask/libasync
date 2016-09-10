@@ -13,6 +13,9 @@
 // Not 100% sure about its status in IE11 though.
 #define ASYNC_TLS_PROTOCOLS (TLS_PROTOCOL_TLSv1_2)
 
+struct tls_config; // From tls.h.
+extern struct tls_config *async_tls_config;
+
 typedef struct {
 	uv_tcp_t stream[1];
 	void *secure;

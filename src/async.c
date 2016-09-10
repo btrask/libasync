@@ -6,6 +6,7 @@
 #include "libressl-portable/include/openssl/rand.h"
 #include "libressl-portable/include/tls.h"
 #include "async.h"
+#include "async_tls.h"
 #include "util/raiserlimit.h"
 
 thread_local uv_loop_t async_loop[1] = {};
@@ -37,6 +38,9 @@ int async_process_init(void) {
 
 	rc = tls_init();
 	if(rc < 0) return UV_EPROTO;
+
+	async_tls_config = tls_config_new();
+	if(!async_tls_config) return UV_ENOMEM;
 
 	uv_signal_init(async_loop, sigpipe);
 	uv_signal_start(sigpipe, ignore_fn, SIGPIPE);
