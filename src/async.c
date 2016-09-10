@@ -3,7 +3,8 @@
 
 #include <assert.h>
 #include <string.h>
-#include "../deps/libressl-portable/include/openssl/rand.h"
+#include "libressl-portable/include/openssl/rand.h"
+#include "libressl-portable/include/tls.h"
 #include "async.h"
 #include "util/raiserlimit.h"
 
@@ -33,6 +34,9 @@ int async_process_init(void) {
 
 	int rc = async_init();
 	if(rc < 0) return rc;
+
+	rc = tls_init();
+	if(rc < 0) return UV_EPROTO;
 
 	uv_signal_init(async_loop, sigpipe);
 	uv_signal_start(sigpipe, ignore_fn, SIGPIPE);
