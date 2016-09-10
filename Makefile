@@ -1,6 +1,9 @@
 # Copyright 2016 Ben Trask
 # MIT licensed (see LICENSE for details)
 
+DESTDIR ?=
+PREFIX ?= /usr/local
+
 ROOT_DIR := .
 BUILD_DIR := $(ROOT_DIR)/build
 DEPS_DIR := $(ROOT_DIR)/deps
@@ -101,6 +104,11 @@ $(BUILD_DIR)/src/%.o: $(SRC_DIR)/%.c
 $(INCLUDE_DIR)/async/%.h: $(SRC_DIR)/%.h
 	@- mkdir -p $(dir $@)
 	cp $^ $@
+
+.PHONY: install-root-certs
+install-root-certs:
+	@- mkdir -p $(dir $(DESTDIR)$(PREFIX)/etc/ssl/cert.pem)
+	install $(DEPS_DIR)/libressl-portable/apps/openssl/cert.pem $(DESTDIR)$(PREFIX)/etc/ssl/cert.pem
 
 .PHONY: clean
 clean:
