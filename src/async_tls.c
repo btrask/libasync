@@ -19,8 +19,7 @@ static int tls_poll(uv_stream_t *const stream, int const event) {
 		// uv_poll can't be used on uv's own stream fds.
 		rc = async_sleep(50);
 	} else {
-		rc = -errno; // TODO: Might have problems on Windows?
-		if(rc >= 0) rc = UV_EOF; // Most common case, is this guaranteed?
+		rc = event;
 	}
 	return rc;
 }
@@ -76,14 +75,12 @@ int async_tls_connect(char const *const host, char const *const port, bool const
 	}
 
 	if(secure) {
-		errno = 0;
 		config = tls_config_new();
-		if(!config) rc = -errno < 0 ? -errno : -ENOMEM;
+		if(!config) rc = UV_ENOMEM;
 		if(rc < 0) goto cleanup;
 
-		errno = 0;
 		socket->secure = tls_client();
-		if(!socket->secure) rc = -errno < 0 ? -errno : UV_ENOMEM;
+		if(!socket->secure) rc = UV_ENOMEM;
 		if(rc < 0) goto cleanup;
 		rc = tls_configure(socket->secure, config);
 		if(rc < 0) goto cleanup;
@@ -116,6 +113,11 @@ void async_tls_close(async_tls_t *const socket) {
 bool async_tls_is_secure(async_tls_t *const socket) {
 	if(!socket) return false;
 	return !!socket->secure;
+}
+char const *async_tls_error(async_tls_t *const socket) {
+	if(!socket) return NULL;
+	if(!socket->secure) return NULL;
+	return tls_error(socket->secure);
 }
 
 ssize_t async_tls_read(async_tls_t *const socket, unsigned char *const buf, size_t const max) {

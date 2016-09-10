@@ -45,6 +45,7 @@ ssize_t async_read(uv_stream_t *const stream, unsigned char *const buf, size_t c
 		rc = state->status;
 	} while(UV_EAGAIN == rc);
 	if(UV_EOF == rc) return 0;
+	if(UV_ENOBUFS == rc && 0 == max) rc = 0;
 	return rc;
 }
 

@@ -22,6 +22,7 @@ int async_tls_accept(async_tls_t *const server, async_tls_t *const socket);
 int async_tls_connect(char const *const host, char const *const port, bool const secure, async_tls_t *const socket);
 void async_tls_close(async_tls_t *const socket);
 bool async_tls_is_secure(async_tls_t *const socket);
+char const *async_tls_error(async_tls_t  *const socket);
 
 ssize_t async_tls_read(async_tls_t *const socket, unsigned char *const buf, size_t const max);
 ssize_t async_tls_write(async_tls_t *const socket, unsigned char const *const buf, size_t const len);

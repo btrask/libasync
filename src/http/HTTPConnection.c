@@ -129,9 +129,10 @@ int HTTPConnectionPeek(HTTPConnectionRef const conn, HTTPEvent *const type, uv_b
 			// Don't reserve memory while blocking.
 			FREE(&conn->buf);
 			ssize_t x = async_tls_read(conn->socket, NULL, 0);
-			assert(x < 0);
+			assert(x <= 0);
 			assert(UV_EOF != x); // We expect to read 0 instead.
-			if(UV_ENOBUFS != x) {
+			assert(UV_ENOBUFS != x);
+			if(x < 0) {
 				conn->err = x;
 				return x;
 			}
