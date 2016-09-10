@@ -8,6 +8,12 @@
 #include "async_tls.h"
 #include "util/common.h"
 
+static int tlserr(int const rc, struct tls *const secure) {
+	if(0 == rc) return 0;
+	assert(-1 == rc);
+//	fprintf(stderr, "TLS error: %s\n", tls_error(secure));
+	return UV_EPROTO;
+}
 static int tls_poll(uv_stream_t *const stream, int const event) {
 	int rc;
 	if(TLS_WANT_POLLIN == event) {
@@ -36,12 +42,12 @@ int async_tls_accept(async_tls_t *const server, async_tls_t *const socket) {
 		uv_os_fd_t fd;
 		rc = uv_fileno((uv_handle_t *)socket->stream, &fd);
 		if(rc < 0) goto cleanup;
-		rc = tls_accept_socket(server->secure, (struct tls **)&socket->secure, fd);
+		rc = tlserr(tls_accept_socket(server->secure, (struct tls **)&socket->secure, fd), server->secure);
 		if(rc < 0) goto cleanup;
 		for(;;) {
 			int event = tls_handshake(socket->secure);
 			if(0 == event) break;
-			rc = tls_poll((uv_stream_t *)socket->stream, event);
+			rc = tlserr(tls_poll((uv_stream_t *)socket->stream, event), socket->secure);
 			if(rc < 0) goto cleanup;
 		}
 	}
@@ -87,12 +93,12 @@ int async_tls_connect(char const *const host, char const *const port, bool const
 		uv_os_fd_t fd;
 		rc = uv_fileno((uv_handle_t *)socket->stream, &fd);
 		if(rc < 0) goto cleanup;
-		rc = tls_connect_socket(socket->secure, fd, host);
+		rc = tlserr(tls_connect_socket(socket->secure, fd, host), socket->secure);
 		if(rc < 0) goto cleanup;
 		for(;;) {
 			int event = tls_handshake(socket->secure);
 			if(0 == event) break;
-			rc = tls_poll((uv_stream_t *)socket->stream, event);
+			rc = tlserr(tls_poll((uv_stream_t *)socket->stream, event), socket->secure);
 			if(rc < 0) goto cleanup;
 		}
 	}
@@ -128,7 +134,7 @@ ssize_t async_tls_read(async_tls_t *const socket, unsigned char *const buf, size
 	for(;;) {
 		ssize_t x = tls_read(socket->secure, buf, max);
 		if(x >= 0) return x;
-		int rc = tls_poll((uv_stream_t *)socket->stream, (int)x);
+		int rc = tlserr(tls_poll((uv_stream_t *)socket->stream, (int)x), socket->secure);
 		if(rc < 0) return rc;
 	}
 	assert(0);
@@ -142,7 +148,7 @@ ssize_t async_tls_write(async_tls_t *const socket, unsigned char const *const bu
 	for(;;) {
 		ssize_t x = tls_write(socket->secure, buf, len);
 		if(x >= 0) return x;
-		int rc = tls_poll((uv_stream_t *)socket->stream, (int)x);
+		int rc = tlserr(tls_poll((uv_stream_t *)socket->stream, (int)x), socket->secure);
 		if(rc < 0) return rc;
 	}
 	assert(0);
