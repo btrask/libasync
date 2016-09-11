@@ -58,6 +58,7 @@ int HTTPConnectionWriteSetCookie(HTTPConnectionRef const conn, char const *const
 int HTTPConnectionBeginBody(HTTPConnectionRef const conn);
 int HTTPConnectionWriteFile(HTTPConnectionRef const conn, uv_file const file);
 int HTTPConnectionWriteChunkLength(HTTPConnectionRef const conn, uint64_t const length);
+int HTTPConnectionWriteChunk(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len);
 int HTTPConnectionWriteChunkv(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count);
 int HTTPConnectionWriteChunkFile(HTTPConnectionRef const conn, char const *const path);
 int HTTPConnectionWriteChunkEnd(HTTPConnectionRef const conn);

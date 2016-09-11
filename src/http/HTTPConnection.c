@@ -546,6 +546,14 @@ int HTTPConnectionWriteChunkLength(HTTPConnectionRef const conn, uint64_t const 
 	if(slen < 0) return UV_UNKNOWN;
 	return HTTPConnectionWrite(conn, (unsigned char const *)str, slen);
 }
+int HTTPConnectionWriteChunk(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len) {
+	if(!conn) return 0;
+	int rc =  0;
+	rc = rc < 0 ? rc : HTTPConnectionWriteChunkLength(conn, len);
+	rc = rc < 0 ? rc : HTTPConnectionWrite(conn, buf, len);
+	rc = rc < 0 ? rc : HTTPConnectionWrite(conn, (unsigned char const *)STR_LEN("\r\n"));
+	return rc;
+}
 int HTTPConnectionWriteChunkv(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count) {
 	if(!conn) return 0;
 	uint64_t total = 0;
