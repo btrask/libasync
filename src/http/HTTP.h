@@ -91,6 +91,7 @@ static int HTTPError(int const uverr) {
 		case UV_EMSGSIZE: return 413; // Request Entity Too Large
 		case UV_ENAMETOOLONG: return 414; // Request-URI Too Large
 		case UV_E2BIG: return 431; // Request Header Fields Too Large
+		case UV_ENOSYS: return 501; // Not Implemented
 		default: return 500; // Internal Server Error
 	}
 }
