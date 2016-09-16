@@ -61,15 +61,16 @@ ssize_t async_write(uv_stream_t *const stream, unsigned char const *const buf, s
 	state->thread = async_active();
 	uv_write_t req[1];
 	req->data = &state;
-	uv_buf_t obj = uv_buf_init((char *)buf, len);
+	uv_buf_t obj[1] = { uv_buf_init((char *)buf, len) };
 	int rc;
 	do {
-		rc = uv_write(req, stream, &obj, 1, write_cb);
+		rc = uv_write(req, stream, obj, 1, write_cb);
 		if(rc < 0) return rc;
 		async_yield();
 		rc = state->status;
 	} while(UV_EAGAIN == rc);
-	return rc;
+	if(rc < 0) return rc;
+	return obj->len;
 }
 
 

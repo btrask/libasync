@@ -415,7 +415,7 @@ ssize_t HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *c
 	size_t total = 0;
 	while(total < len) {
 		ssize_t x = async_tls_write(conn->socket, buf+total, len-total);
-		if(x < 0) {
+		if(x <= 0) {
 			if(total > 0) return total;
 			return x;
 		}
@@ -428,12 +428,12 @@ ssize_t HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], uns
 	size_t total = 0;
 	for(size_t i = 0; i < count; i++) {
 		if(!parts[i].len) continue;
-		ssize_t len = async_tls_write(conn->socket, (unsigned char const *)parts[i].base, parts[i].len);
-		if(len < 0) {
+		ssize_t x = HTTPConnectionWrite(conn, (unsigned char const *)parts[i].base, parts[i].len);
+		if(x <= 0) {
 			if(total > 0) return total;
-			return len;
+			return x;
 		}
-		total += len;
+		total += x;
 	}
 	return total;
 }
