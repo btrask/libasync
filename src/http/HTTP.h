@@ -45,8 +45,8 @@ ssize_t HTTPConnectionReadBodyStatic(HTTPConnectionRef const conn, unsigned char
 int HTTPConnectionDrainMessage(HTTPConnectionRef const conn);
 
 // Writing, low level
-int HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len);
-int HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count);
+ssize_t HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len);
+ssize_t HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count);
 int HTTPConnectionFlush(HTTPConnectionRef const conn);
 
 // Writing, high level

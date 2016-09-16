@@ -410,17 +410,32 @@ int HTTPConnectionDrainMessage(HTTPConnectionRef const conn) {
 }
 
 
-int HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len) {
+ssize_t HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len) {
 	if(!conn) return 0;
-	return async_tls_write(conn->socket, buf, len);
-}
-int HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count) {
-	if(!conn) return 0;
-	for(size_t i = 0; i < count; i++) {
-		int rc = async_tls_write(conn->socket, (unsigned char const *)parts[i].base, parts[i].len);
-		if(rc < 0) return rc;
+	size_t total = 0;
+	while(total < len) {
+		ssize_t x = async_tls_write(conn->socket, buf, len);
+		if(x < 0) {
+			if(total > 0) return total;
+			return len;
+		}
+		total += len;
 	}
-	return 0;
+	return total;
+}
+ssize_t HTTPConnectionWritev(HTTPConnectionRef const conn, uv_buf_t parts[], unsigned int const count) {
+	if(!conn) return 0;
+	size_t total = 0;
+	for(size_t i = 0; i < count; i++) {
+		if(!parts[i].len) continue;
+		ssize_t len = async_tls_write(conn->socket, (unsigned char const *)parts[i].base, parts[i].len);
+		if(len < 0) {
+			if(total > 0) return total;
+			return len;
+		}
+		total += len;
+	}
+	return total;
 }
 int HTTPConnectionFlush(HTTPConnectionRef const conn) {
 	if(!conn) return 0;
