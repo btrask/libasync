@@ -417,9 +417,9 @@ ssize_t HTTPConnectionWrite(HTTPConnectionRef const conn, unsigned char const *c
 		ssize_t x = async_tls_write(conn->socket, buf, len);
 		if(x < 0) {
 			if(total > 0) return total;
-			return len;
+			return x;
 		}
-		total += len;
+		total += x;
 	}
 	return total;
 }
