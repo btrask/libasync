@@ -563,6 +563,7 @@ int HTTPConnectionWriteChunkLength(HTTPConnectionRef const conn, uint64_t const 
 }
 int HTTPConnectionWriteChunk(HTTPConnectionRef const conn, unsigned char const *const buf, size_t const len) {
 	if(!conn) return 0;
+	if(len <= 0) return 0;
 	int rc =  0;
 	rc = rc < 0 ? rc : HTTPConnectionWriteChunkLength(conn, len);
 	rc = rc < 0 ? rc : HTTPConnectionWrite(conn, buf, len);
