@@ -396,9 +396,7 @@ err:
 static void
 openssl_startup(void)
 {
-#ifndef _WIN32
 	signal(SIGPIPE, SIG_IGN);
-#endif
 
 	OpenSSL_add_all_algorithms();
 	SSL_library_init();
