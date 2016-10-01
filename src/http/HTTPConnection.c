@@ -690,7 +690,12 @@ int HTTPConnectionSendSecureRedirect(HTTPConnectionRef const conn, char const *c
 	if(!port) return UV_EINVAL;
 	if(!URI || '/' != URI[0]) return UV_EINVAL;
 	char loc[1023+1]; // TODO: We should be URI_MAX agnostic.
-	int rc = snprintf(loc, sizeof(loc), "https://%s:%d%s", domain, port, URI);
+	int rc = 0;
+	if(443 == port) { // Don't include default HTTPS port.
+		rc = snprintf(loc, sizeof(loc), "https://%s%s", domain, URI);
+	} else {
+		rc = snprintf(loc, sizeof(loc), "https://%s:%d%s", domain, port, URI);
+	}
 	if(rc >= sizeof(loc)) return UV_ENAMETOOLONG;
 	if(rc < 0) return rc;
 	return HTTPConnectionSendRedirect(conn, 301, loc);
