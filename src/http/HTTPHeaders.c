@@ -96,7 +96,7 @@ int HTTPHeadersLoad(HTTPHeadersRef const h, HTTPConnectionRef const conn) {
 		ssize_t const vlen = HTTPConnectionReadHeaderValue(conn, value, sizeof(value));
 		if(UV_ENAMETOOLONG == flen) continue;
 		if(flen < 0) return flen;
-		if(UV_ENAMETOOLONG == vlen) return UV_E2BIG;
+		if(UV_ENAMETOOLONG == vlen) continue;
 		if(vlen < 0) return vlen;
 
 		if(!connheader && 0 == strcasecmp("connection", field)) {
@@ -106,9 +106,9 @@ int HTTPHeadersLoad(HTTPHeadersRef const h, HTTPConnectionRef const conn) {
 			connheader = true;
 		}
 
-		if(h->count >= HEADERS_MAX) return UV_E2BIG;
-		if(h->offset+flen+1 > FIELDS_SIZE) return UV_E2BIG;
-		if(h->total+vlen > TOTAL_MAX) return UV_E2BIG;
+		if(h->count >= HEADERS_MAX) continue;
+		if(h->offset+flen+1 > FIELDS_SIZE) continue;
+		if(h->total+vlen > TOTAL_MAX) continue;
 		if(!flen) continue;
 
 		// We could use strlcpy() here, but it doesn't buy us much...
