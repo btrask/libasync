@@ -8,30 +8,28 @@
 #include "../util/common.h"
 
 // HTTPHeaders currently uses linear search of the header fields during
-// lookup. The theory is that the total field size is quite small (currently
-// 256 bytes) and headers are not accessed too often per request, so this
-// might actually be faster than a hash table. That said, no micro-
-// benchmarks have been done. (If you want to compare, please include the
-// cost of creating the hash table.)
+// lookup. The theory is that the total field size is quite small and
+// headers are not accessed too often per request, so this might actually
+// be faster than a hash table. That said, no micro-benchmarks have been
+// done. (If you want to compare, please include the cost of creating
+// the hash table.)
 
 // The miserly constraints below are intended to resist
 // abuse (i.e. denial of service) as much as possible.
 
-// Chrome and Firefox both appear to send 9 headers
-// by default on my test config.
-#define HEADERS_MAX 20
-// Chrome sends 99 characters of field names in my test.
-// Firefox sends 79.
-#define FIELDS_SIZE 256
-// The longest common field names are "Accept-Encoding"
-// and "Accept-Language" at 16 characters each (w/ nul).
-#define FIELD_MAX (23+1)
+// GitHub serves 21-23 headers in my tests.
+#define HEADERS_MAX 25
+// Requests: Chrome (99), Firefox (79)
+// Responses: GitHub (~300)
+#define FIELDS_SIZE (64*5)
+// "Strict-Transport-Security" is 25+1.
+#define FIELD_MAX (25+1)
 // VALUE_MAX should be modestly longer than URI_MAX
 // in order to handle the Referer.
 #define VALUE_MAX (1023+256+1)
-// TOTAL_MAX should be less than VALUE_MAX*HEADERS_MAX
-// in order to constrain the average value size.
-#define TOTAL_MAX (1024*10)
+// GitHub only sends ~1800 bytes.
+// But remember a long referer counts against this too.
+#define TOTAL_MAX (1024*3)
 
 struct HTTPHeaders {
 	char *fields;
