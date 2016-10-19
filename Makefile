@@ -105,6 +105,16 @@ $(INCLUDE_DIR)/async/%.h: $(SRC_DIR)/%.h
 	@- mkdir -p $(dir $@)
 	cp $^ $@
 
+$(BUILD_DIR)/tools/async-curl: $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a $(HEADERS)
+	@- mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(WARNINGS) -I$(INCLUDE_DIR) -iquote $(DEPS_DIR) -I$(DEPS_DIR)/libressl-portable/include $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.a $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.a $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.a $(DEPS_DIR)/uv/.libs/libuv.a -lpthread -o $@
+
+.PHONY: async-curl
+async-curl: $(BUILD_DIR)/tools/async-curl
+
+.PHONY: tools
+tools: async-curl
+
 .PHONY: install-root-certs
 install-root-certs:
 	@- mkdir -p $(dir $(DESTDIR)$(PREFIX)/etc/ssl/cert.pem)
