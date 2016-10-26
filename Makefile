@@ -105,6 +105,9 @@ $(INCLUDE_DIR)/async/%.h: $(SRC_DIR)/%.h
 	@- mkdir -p $(dir $@)
 	cp $^ $@
 
+# TODO: God this is awful.
+# 1. Build dependencies in a DESTDIR so we can include and link them easier
+# 2. Figure out how to bundle libtls, libssl, libcrypto, and libuv into libasync
 $(BUILD_DIR)/tools/async-curl: $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a $(HEADERS)
 	@- mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $(WARNINGS) -I$(INCLUDE_DIR) -iquote $(DEPS_DIR) -I$(DEPS_DIR)/libressl-portable/include $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.a $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.a $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.a $(DEPS_DIR)/uv/.libs/libuv.a -lpthread -o $@
