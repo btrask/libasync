@@ -168,6 +168,7 @@ void fetch(void *arg) {
 	rc = 0;
 
 cleanup:
+	HTTPConnectionFree(&conn);
 	if(rc < 0) {
 		fprintf(stderr, "Connection error %s\n", uv_strerror(rc));
 		exit(1);
