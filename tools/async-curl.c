@@ -8,6 +8,9 @@
 
 #include <async/async.h>
 #include <async/http/HTTP.h>
+#include <async/http/status.h>
+
+#define USER_AGENT "async-curl (https://github.com/btrask/libasync)"
 
 #define URL_SCHEME_MAX (31+1)
 #define URL_SCHEME_FMT "%31[^:]"
@@ -86,9 +89,7 @@ int host_parse(char const *const host, host_t *const out) {
 	return 0;
 }
 
-#define USER_AGENT "Hash Archive (https://github.com/btrask/hash-archive)"
-
-static int send_get(char const *const URL, char const *const client, HTTPConnectionRef *const out) {
+static int send_get(char const *const URL, HTTPConnectionRef *const out) {
 	assert(out);
 	HTTPConnectionRef conn = NULL;
 	url_t obj[1];
@@ -113,7 +114,6 @@ static int send_get(char const *const URL, char const *const client, HTTPConnect
 	rc = rc < 0 ? rc : HTTPConnectionConnect(host->domain, host->port, secure, 0, &conn);
 	rc = rc < 0 ? rc : HTTPConnectionWriteRequest(conn, HTTP_GET, obj->path, obj->host);
 	rc = rc < 0 ? rc : HTTPConnectionWriteHeader(conn, "User-Agent", USER_AGENT);
-	rc = rc < 0 ? rc : HTTPConnectionWriteHeader(conn, "X-Forwarded-For", client); // TODO
 	HTTPConnectionSetKeepAlive(conn, false); // No point.
 	rc = rc < 0 ? rc : HTTPConnectionBeginBody(conn);
 	rc = rc < 0 ? rc : HTTPConnectionEnd(conn);
@@ -130,9 +130,48 @@ void fetch(void *arg) {
 	HTTPConnectionRef conn = NULL;
 	int status = 0;
 	int rc = 0;
-	rc = rc < 0 ? rc : send_get(url, "", &conn);
-	rc = rc < 0 ? rc : HTTPConnectionReadResponseStatus(conn, &status);
-	fprintf(stderr, "rc = %s, status = %d\n", uv_strerror(rc), status);
+
+	fprintf(stderr, "GET %s HTTP/1.1\n", url);
+	rc = send_get(url, &conn);
+	if(rc < 0) goto cleanup;
+
+	rc = HTTPConnectionReadResponseStatus(conn, &status);
+	if(rc < 0) goto cleanup;
+	fprintf(stderr, "HTTP/x.x %d %s\n", status, statusstr(status));
+
+	for(;;) {
+		uv_buf_t buf[1];
+		HTTPEvent type;
+		char field[63+1];
+		char value[2047+1];
+		rc = HTTPConnectionPeek(conn, &type, buf);
+		if(rc < 0) goto cleanup;
+		if(HTTPHeadersComplete == type) {
+			HTTPConnectionPop(conn, buf->len);
+			break;
+		}
+		rc = HTTPConnectionReadHeaderField(conn, field, sizeof(field));
+		if(rc < 0) goto cleanup;
+		rc = HTTPConnectionReadHeaderValue(conn, value, sizeof(value));
+		if(rc < 0) goto cleanup;
+		fprintf(stderr, "%s: %s\n", field, value);
+	}
+	fprintf(stderr, "\n");
+
+	for(;;) {
+		uv_buf_t buf[1];
+		rc = HTTPConnectionReadBody(conn, buf);
+		if(UV_EOF == rc) break;
+		if(rc < 0) goto cleanup;
+		fwrite(buf->base, 1, buf->len, stdout);
+	}
+	rc = 0;
+
+cleanup:
+	if(rc < 0) {
+		fprintf(stderr, "Connection error %s\n", uv_strerror(rc));
+		exit(1);
+	}
 }
 int main(int const argc, char *const argv[]) {
 	int rc = async_init();
@@ -142,8 +181,6 @@ int main(int const argc, char *const argv[]) {
 		fprintf(stderr, "Usage: async-curl url\n");
 		return 1;
 	}
-	fprintf(stderr, "Loading %s\n", argv[1]);
-
 	async_spawn(STACK_DEFAULT, fetch, argv[1]);
 	uv_run(async_loop, UV_RUN_DEFAULT);
 
