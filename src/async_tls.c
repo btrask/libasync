@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "libressl-portable/include/tls.h"
+#include "libressl-portable/include/openssl/err.h"
+#include "libressl-portable/include/openssl/ssl.h"
 #include "async_tls.h"
 #include "util/common.h"
 
@@ -13,7 +15,14 @@ struct tls_config *async_tls_config = NULL;
 static int tlserr(int const rc, struct tls *const secure) {
 	if(0 == rc) return 0;
 	assert(-1 == rc);
-//	fprintf(stderr, "TLS error: %s\n", tls_error(secure));
+	if(0) { // DEBUG
+		fprintf(stderr, "TLS error: %s\n", tls_error(secure));
+
+		SSL_load_error_strings();
+		char x[255+1];
+		ERR_error_string_n(ERR_get_error(), x, sizeof(x));
+		fprintf(stderr, "SSL error: %s\n", x);
+	}
 	return UV_EPROTO;
 }
 static int tls_poll(uv_stream_t *const stream, int const event) {
