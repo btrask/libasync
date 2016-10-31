@@ -74,10 +74,14 @@ endif
 
 
 SHARED_OBJECTS += $(DEPS_DIR)/uv/.libs/libuv.so
+STATIC_LIBS += $(DEPS_DIR)/uv/.libs/libuv.a
 
 SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.so
 SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.so
 SHARED_OBJECTS += $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.so
+STATIC_LIBS += $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.a
+STATIC_LIBS += $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.a
+STATIC_LIBS += $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.a
 CFLAGS += -I$(DEPS_DIR)/libressl-portable/include
 
 RAW_HEADERS := $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/http/*.h)
@@ -89,9 +93,16 @@ $(BUILD_DIR)/libasync.so: $(OBJECTS) $(SHARED_OBJECTS)
 	@- mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -shared $^ -o $@
 
-$(BUILD_DIR)/libasync.a: $(OBJECTS)
+$(BUILD_DIR)/libasync.a: $(OBJECTS) $(STATIC_LIBS)
 	@- mkdir -p $(dir $@)
-	$(AR) rs $@ $^
+	# TODO: Clean this up
+	echo "CREATE $@\n \
+		$(addprefix \n ADDMOD ,$(OBJECTS))\n \
+		$(addprefix \n ADDLIB ,$(STATIC_LIBS))\n \
+		SAVE\n \
+		END" | \
+		$(AR) -M
+	ranlib $@
 
 $(BUILD_DIR)/src/%.o: $(SRC_DIR)/%.c
 	@- mkdir -p $(dir $@)
@@ -110,7 +121,7 @@ $(INCLUDE_DIR)/async/%.h: $(SRC_DIR)/%.h
 # 2. Figure out how to bundle libtls, libssl, libcrypto, and libuv into libasync
 $(BUILD_DIR)/tools/async-curl: $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a $(HEADERS)
 	@- mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(WARNINGS) -I$(INCLUDE_DIR) -iquote $(DEPS_DIR) -I$(DEPS_DIR)/libressl-portable/include $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.a $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.a $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.a $(DEPS_DIR)/uv/.libs/libuv.a -lpthread -o $@
+	$(CC) $(CFLAGS) $(WARNINGS) -I$(INCLUDE_DIR) -iquote $(DEPS_DIR) -I$(DEPS_DIR)/libressl-portable/include $(ROOT_DIR)/tools/async-curl.c $(BUILD_DIR)/libasync.a -lpthread -o $@
 
 .PHONY: async-curl
 async-curl: $(BUILD_DIR)/tools/async-curl
