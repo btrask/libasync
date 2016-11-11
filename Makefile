@@ -147,11 +147,15 @@ distclean: clean
 $(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.so: | libressl
 $(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.so: | libressl
 $(DEPS_DIR)/libressl-portable/tls/.libs/libtls.so: | libressl
+$(DEPS_DIR)/libressl-portable/crypto/.libs/libcrypto.a: | libressl
+$(DEPS_DIR)/libressl-portable/ssl/.libs/libssl.a: | libressl
+$(DEPS_DIR)/libressl-portable/tls/.libs/libtls.a: | libressl
 .PHONY: libressl
 libressl:
 	$(MAKE) -C $(DEPS_DIR)/libressl-portable --no-print-directory
 
 $(DEPS_DIR)/uv/.libs/libuv.so: | libuv
+$(DEPS_DIR)/uv/.libs/libuv.a: | libuv
 .PHONY: libuv
 libuv:
 	$(MAKE) -C $(DEPS_DIR)/uv --no-print-directory
