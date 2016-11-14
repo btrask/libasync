@@ -42,6 +42,10 @@ int async_process_init(void) {
 	async_tls_config = tls_config_new();
 	if(!async_tls_config) return UV_ENOMEM;
 
+	rc = tls_config_set_ciphers(async_tls_config, ASYNC_TLS_CIPHERS);
+	if(rc < 0) return UV_EPROTO;
+	tls_config_set_protocols(async_tls_config, ASYNC_TLS_PROTOCOLS);
+
 	uv_signal_init(async_loop, sigpipe);
 	uv_signal_start(sigpipe, ignore_fn, SIGPIPE);
 	uv_unref((uv_handle_t *)sigpipe);
