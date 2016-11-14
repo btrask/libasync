@@ -17,7 +17,7 @@ struct async_worker_s {
 
 static void work(void *const arg) {
 	async_worker_t *const worker = arg;
-	async_init();
+	async_thread_init();
 	worker->main = async_main;
 	async_main = NULL;
 	for(;;) {
@@ -26,7 +26,7 @@ static void work(void *const arg) {
 		uv_async_send(worker->async);
 		if(!worker->run) break;
 	}
-	async_destroy();
+	async_thread_destroy();
 }
 static void enter(void *const arg) {
 	async_worker_t *const worker = arg;

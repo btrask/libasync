@@ -36,10 +36,10 @@ typedef struct {
 extern thread_local uv_loop_t async_loop[1];
 extern thread_local async_t *async_main;
 
-int async_process_init(void); // Main thread
+int async_process_init(void);
 void async_process_destroy(void);
-int async_init(void); // Secondary threads
-void async_destroy(void);
+int async_thread_init(void);
+void async_thread_destroy(void);
 
 async_t *async_active(void);
 int async_spawn(size_t const stack, void (*const func)(void *), void *const arg);

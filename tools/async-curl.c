@@ -179,7 +179,7 @@ cleanup:
 	}
 }
 int main(int const argc, char *const argv[]) {
-	int rc = async_init();
+	int rc = async_process_init();
 	if(rc < 0) abort();
 
 	if(argc <= 1) {

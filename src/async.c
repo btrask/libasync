@@ -33,7 +33,7 @@ int async_process_init(void) {
 
 	raiserlimit();
 
-	int rc = async_init();
+	int rc = async_thread_init();
 	if(rc < 0) return rc;
 
 	rc = tls_init();
@@ -52,9 +52,9 @@ void async_process_destroy(void) {
 	uv_ref((uv_handle_t *)sigpipe);
 	uv_signal_stop(sigpipe);
 	uv_close((uv_handle_t *)sigpipe, NULL);
-	async_destroy();
+	async_thread_destroy();
 }
-int async_init(void) {
+int async_thread_init(void) {
 	int rc = uv_loop_init(async_loop);
 	if(rc < 0) return rc;
 	master->fiber = co_active();
@@ -65,7 +65,7 @@ int async_init(void) {
 	if(!trampoline) return UV_ENOMEM;
 	return 0;
 }
-void async_destroy(void) {
+void async_thread_destroy(void) {
 	co_delete(trampoline); trampoline = NULL;
 	uv_loop_close(async_loop);
 	memset(async_loop, 0, sizeof(async_loop));
