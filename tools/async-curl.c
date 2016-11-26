@@ -114,6 +114,7 @@ static int send_get(char const *const URL, HTTPConnectionRef *const out) {
 	if(0 == strcmp("", obj->path)) {
 		strlcpy(obj->path, "/", sizeof(obj->path));
 	}
+	strlcat(obj->path, obj->query, sizeof(obj->path));
 
 	rc = rc < 0 ? rc : HTTPConnectionConnect(host->domain, host->port, secure, 0, &conn);
 	rc = rc < 0 ? rc : HTTPConnectionWriteRequest(conn, HTTP_GET, obj->path, obj->host);
